@@ -1,9 +1,9 @@
+import { getEmbedColorFromRarity } from '../utils/utils';
 import {
   AutocompleteInteraction,
   ChatInputCommandInteraction,
   SlashCommandBuilder,
 } from 'discord.js';
-import logger from '../lib/logger';
 import { getHeroes } from '../lib/storage';
 import { Command } from '../types/Command';
 import { WIKI_HEROES_URL, WIKI_HERO_CARDS_URL } from '../utils/constants';
@@ -55,9 +55,6 @@ export default class extends Command {
     }
     const sp = selectedHero.spHero;
 
-    const bondReq = selectedHero.bondRequirements;
-    const bondRequirementsText = `${bondReq.bond2}\n${bondReq.bond3}\n${bondReq.bond4}\n${bondReq.bond5}}`;
-
     const secondLineClasses = selectedHero.startingClass.children.flatMap(
       (c) => c.children
     );
@@ -86,13 +83,16 @@ export default class extends Command {
       | MDEF: ${sp.soldierBonus.mdef}`;
     }
 
-    const heartBondText = `**Level 4**\n${selectedHero.heartBond?.lv4}\n**Level 7**\n${selectedHero.heartBond?.lv7}`;
+    let eeText;
+    const ee = selectedHero.exclusiveEquipment;
+    if (ee)
+      eeText = `**Name:** ${ee.name}\n**Effect:** ${ee.effect}\n**Slot:** ${ee.slot}`;
 
     await interaction.reply({
       ephemeral,
       embeds: [
         {
-          color: 0xd0c193,
+          color: getEmbedColorFromRarity(selectedHero.rarity),
           title: selectedHero.name,
           url: `${WIKI_HEROES_URL}/heroes/${encodeURI(selectedHero.code)}`,
           thumbnail: {
@@ -115,22 +115,11 @@ export default class extends Command {
                   },
                 ]
               : []),
-            {
-              name: 'Bond Requirements',
-              value: bondRequirementsText,
-            },
-            ...(bondReq.relatedBonds.length > 0
+            ...(eeText
               ? [
                   {
-                    name: 'Related Bonds',
-                    value: bondReq.relatedBonds
-                      .map(
-                        (b) =>
-                          `- **[${b.name}](${WIKI_HEROES_URL}/${encodeURI(
-                            b.code
-                          )})** ${b.type}: ${b.text}`
-                      )
-                      .join('\n'),
+                    name: 'Exclusive Equipment',
+                    value: eeText,
                   },
                 ]
               : []),
@@ -142,14 +131,6 @@ export default class extends Command {
               name: 'Soldier Bonus',
               value: soldierBonusText,
             },
-            ...(selectedHero.heartBond
-              ? [
-                  {
-                    name: 'Heart Bond Passives',
-                    value: heartBondText,
-                  },
-                ]
-              : []),
           ],
         },
       ],

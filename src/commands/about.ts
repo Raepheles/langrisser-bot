@@ -37,7 +37,7 @@ export default class extends Command {
       ephemeral,
       embeds: [
         {
-          color: 0xd0c193,
+          color: 0xfeeacf,
           title: interaction.client.user.username,
           description:
             'Lana is a bot I made for Langrisser Mobile. The data provided by the bot is taken \

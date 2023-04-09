@@ -68,7 +68,7 @@ export interface HeroSoldierBonus {
 
 export interface HeroSkin {
   index: number;
-  cost?: number;
+  cost?: string;
   name?: string;
   notes?: string;
   source?: string;

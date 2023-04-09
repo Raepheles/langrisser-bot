@@ -1,4 +1,4 @@
-import { findSimilarStrings } from '../string';
+import { findSimilarStrings } from './string';
 
 describe('findSimilarStrings', () => {
   it('returns an exact match when one is found', () => {

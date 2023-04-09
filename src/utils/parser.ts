@@ -1,7 +1,11 @@
 import { Collection } from 'discord.js';
 import { readFile } from 'fs/promises';
 import mainLogger from '../lib/logger';
-import { setHeroes } from '../lib/storage';
+import {
+  setHeroes,
+  setSkillToHeroes,
+  SkillToHeroesCollection,
+} from '../lib/storage';
 import {
   Hero,
   HeroBondRequirements,
@@ -18,17 +22,18 @@ import {
 } from '../types/Hero';
 import { WIKI_BASE_URL } from './constants';
 import { writeFile } from './file';
+import { getAllHeroSkills } from './utils';
 
 const logger = mainLogger.child({ module: 'parser' });
 
 /**
  * Parses hero data from the Wikigrisser and caches it in a file.
  * If a cache file exists, it will be used instead of fetching the data again.
- * @param {boolean} [cache=true] - Whether to use a cache file or fetch the data again.
+ * @param {boolean} [useCache=true] - Whether to use a cache file or fetch the data again.
  * @returns {Promise<void>}
  */
-export async function parseHeroes(cache: boolean = true) {
-  if (cache) {
+export async function parseHeroes(useCache: boolean = true) {
+  if (useCache) {
     try {
       const heroesCacheText = await readFile('data/heroes.json', {
         encoding: 'utf-8',
@@ -37,10 +42,18 @@ export async function parseHeroes(cache: boolean = true) {
       });
       const heroesCache = JSON.parse(heroesCacheText) as Hero[];
       const heroesCollection = new Collection<string, Hero>();
+      const skillToHeroes: SkillToHeroesCollection = new Collection();
       heroesCache.forEach((hero) => {
         heroesCollection.set(hero.code, hero);
+        for (const skill of getAllHeroSkills(hero)) {
+          skillToHeroes.set(skill.name, [
+            ...(skillToHeroes.get(skill.name) || []),
+            { code: hero.code, name: hero.name },
+          ]);
+        }
       });
       setHeroes(heroesCollection);
+      setSkillToHeroes(skillToHeroes);
       return;
     } catch (error) {
       logger.error(
@@ -69,6 +82,7 @@ export async function parseHeroes(cache: boolean = true) {
   );
 
   const heroes: Collection<string, Hero> = new Collection();
+  const skillToHeroes: SkillToHeroesCollection = new Collection();
   for (const parsedHero of parsedHeroes) {
     const { name, res } = parsedHero;
     if (!res.ok) {
@@ -87,12 +101,19 @@ export async function parseHeroes(cache: boolean = true) {
 
     try {
       const h = parseHero(hero);
+      for (const skill of getAllHeroSkills(h)) {
+        skillToHeroes.set(skill.name, [
+          ...(skillToHeroes.get(skill.name) || []),
+          { code: hero.code, name: hero.name },
+        ]);
+      }
       heroes.set(hero.name, h);
     } catch (error) {
       logger.error(error, `Unexpected error while parsing data for "${name}".`);
     }
   }
   setHeroes(heroes);
+  setSkillToHeroes(skillToHeroes);
   writeFile('data/heroes.json', JSON.stringify(heroes.toJSON(), undefined, 2))
     .then(() => logger.info(`${heroes.size} heroes are cached.`))
     .catch((error) =>
@@ -161,7 +182,7 @@ function parseHero(hero: any): Hero {
       const skinIndexNumber = +skinIndex[0];
       skins.push({
         name: skin.name,
-        cost: skin.cost ?? undefined,
+        cost: skin.cost ? skin.cost.toString() : undefined,
         index: skinIndexNumber,
         source: skin.source,
         notes: skin.notes ?? undefined,
@@ -205,11 +226,11 @@ function parseSpClass(spObj: any, heroName: string): SPHeroClass {
   const unlockRequirements: SPHeroUnlockRequirements = {
     stage1: spObj.unlockRequirments.stage1.map((x: any) => ({
       name: x.name ?? '???',
-      description: x.requirement ?? '???',
+      requirement: x.requirement ?? '???',
     })),
     stage2: spObj.unlockRequirments.stage2.map((x: any) => ({
       name: x.name ?? '???',
-      description: x.requirement ?? '???',
+      requirement: x.requirement ?? '???',
     })),
   };
 
@@ -246,7 +267,7 @@ function parseStartingClass(heroClass: any, heroName: string): HeroClass {
       span: skill.span ? skill.span.toString() : '-',
       range: skill.range ? skill.range.toString() : '-',
       cd: skill.cd ? skill.cd.toString() : '-',
-      cost: skill.cost,
+      cost: skill.cost ? skill.cost.toString() : '-',
     }));
   let maxStats: HeroStats | undefined;
   if (heroClass.maxStats) {

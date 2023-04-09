@@ -1,26 +1,20 @@
 import {
-  ActionRowBuilder,
   AutocompleteInteraction,
   ChatInputCommandInteraction,
   SlashCommandBuilder,
-  StringSelectMenuBuilder,
-  StringSelectMenuInteraction,
 } from 'discord.js';
 import { getHeroes } from '../lib/storage';
 import { Command } from '../types/Command';
-import { Hero } from '../types/Hero';
-import { WIKI_HEROES_URL } from '../utils/constants';
+import { WIKI_HEROES_URL, WIKI_HERO_CARDS_URL } from '../utils/constants';
 import { findSimilarStrings } from '../utils/string';
 import { getEmbedColorFromRarity } from '../utils/utils';
 
 export default class extends Command {
-  selectedHero: Hero | undefined;
-
   constructor() {
     super(
       new SlashCommandBuilder()
-        .setName('image')
-        .setDescription('Sends the image of the hero or skin')
+        .setName('bond')
+        .setDescription('Hero bond information.')
         .addStringOption((option) =>
           option
             .setRequired(true)
@@ -29,20 +23,6 @@ export default class extends Command {
             .setAutocomplete(true)
         )
     );
-  }
-
-  public override async menuSelect(interaction: StringSelectMenuInteraction) {
-    await interaction.deferUpdate();
-    await interaction.editReply({
-      embeds: [
-        {
-          ...interaction.message.embeds[0].data,
-          description: undefined,
-          image: { url: interaction.values[0] },
-        },
-      ],
-      components: [],
-    });
   }
 
   public override async autocomplete(interaction: AutocompleteInteraction) {
@@ -71,40 +51,11 @@ export default class extends Command {
       });
       return;
     }
-    this.selectedHero = selectedHero;
 
-    const row = new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(
-      new StringSelectMenuBuilder()
-        .setCustomId('select')
-        .setPlaceholder('Nothing selected')
-        .addOptions(
-          {
-            label: 'Base',
-            description: 'Base skin',
-            value: `${WIKI_HEROES_URL}/${selectedHero.name}/${selectedHero.name}.png`,
-          },
-          ...(selectedHero.spHero
-            ? [
-                {
-                  label: 'SP',
-                  description: 'SP skin',
-                  value: `${WIKI_HEROES_URL}/${selectedHero.name}/${encodeURI(
-                    `${selectedHero.name} SP`
-                  )}.png`,
-                },
-              ]
-            : []),
-          ...selectedHero.skins
-            .filter((s) => s.name)
-            .map((skin) => ({
-              label: skin.name!,
-              description: skin.name!,
-              value: `${WIKI_HEROES_URL}/${selectedHero.name}/${encodeURI(
-                `${selectedHero.name} Skin ${skin.index}`
-              )}.png`,
-            }))
-        )
-    );
+    const bondReq = selectedHero.bondRequirements;
+    const bondRequirementsText = `${bondReq.bond2}\n${bondReq.bond3}\n${bondReq.bond4}\n${bondReq.bond5}`;
+
+    const heartBondText = `**Level 4**\n${selectedHero.heartBond?.lv4}\n**Level 7**\n${selectedHero.heartBond?.lv7}`;
 
     await interaction.reply({
       ephemeral,
@@ -113,14 +64,44 @@ export default class extends Command {
           color: getEmbedColorFromRarity(selectedHero.rarity),
           title: selectedHero.name,
           url: `${WIKI_HEROES_URL}/heroes/${encodeURI(selectedHero.code)}`,
-          description: 'Select the skin you want to see',
+          thumbnail: {
+            url: `${WIKI_HERO_CARDS_URL}/${encodeURI(selectedHero.name)}.png`,
+          },
           timestamp: new Date().toISOString(),
           footer: {
             text: `Requested by ${interaction.user.tag}`,
           },
+          fields: [
+            {
+              name: 'Bond Requirements',
+              value: bondRequirementsText,
+            },
+            ...(bondReq.relatedBonds.length > 0
+              ? [
+                  {
+                    name: 'Related Bonds',
+                    value: bondReq.relatedBonds
+                      .map(
+                        (b) =>
+                          `- **[${b.name}](${WIKI_HEROES_URL}/${encodeURI(
+                            b.code
+                          )})** ${b.type}: ${b.text}`
+                      )
+                      .join('\n'),
+                  },
+                ]
+              : []),
+            ...(selectedHero.heartBond
+              ? [
+                  {
+                    name: 'Heart Bond Passives',
+                    value: heartBondText,
+                  },
+                ]
+              : []),
+          ],
         },
       ],
-      components: [row],
     });
   }
 }
