@@ -52,9 +52,6 @@ export default class extends Command {
   }
 
   public override async autocomplete(interaction: AutocompleteInteraction) {
-    logger.info(
-      `Autocompleting hero command for ${interaction.options.getFocused()}`
-    );
     const focusedValue = interaction.options.getFocused().toLowerCase();
     const heroes = getHeroes();
     const heroCodes = heroes.map((hero) => hero.code);
