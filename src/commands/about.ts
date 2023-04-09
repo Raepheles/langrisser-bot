@@ -6,6 +6,7 @@ import {
 } from 'discord.js';
 import { getStartDate } from '../lib/storage';
 import { Command } from '../types/Command';
+import { EMBED_COLOR_DEFAULT } from '../utils/constants';
 
 export default class extends Command {
   constructor() {
@@ -37,7 +38,7 @@ export default class extends Command {
       ephemeral,
       embeds: [
         {
-          color: 0xfeeacf,
+          color: EMBED_COLOR_DEFAULT,
           title: interaction.client.user.username,
           description:
             'Lana is a bot I made for Langrisser Mobile. The data provided by the bot is taken \

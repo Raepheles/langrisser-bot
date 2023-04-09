@@ -1,3 +1,4 @@
+import { SlashCommandBooleanOption } from 'discord.js';
 import { Hero, HeroClass, HeroSkill } from '../types/Hero';
 import { EMBED_COLOR_R, EMBED_COLOR_SR, EMBED_COLOR_SSR } from './constants';
 
@@ -29,3 +30,11 @@ export function getEmbedColorFromRarity(heroRarity: string) {
       return 0xffffff;
   }
 }
+
+export const ephemeralOptionAdder = (option: SlashCommandBooleanOption) =>
+  option
+    .setName('ephemeral')
+    .setDescription(
+      'Whether the bot reply should be visible only to you. Default: true'
+    )
+    .setRequired(false);

@@ -1,7 +1,9 @@
 import { ChatInputCommandInteraction, Events } from 'discord.js';
-import logger from '../lib/logger';
+import mainLogger from '../lib/logger';
 import { getCommands } from '../lib/storage';
 import { Event } from '../types/Event';
+
+const logger = mainLogger.child({ module: 'commands' });
 
 export default class extends Event {
   constructor() {
@@ -21,16 +23,13 @@ export default class extends Event {
     const commandInfo = {
       user: interaction.user.tag,
       guild: interaction.guild?.name,
+      options: interaction.options,
     };
 
     try {
-      logger.trace(
-        { command: commandInfo },
-        `Executing command "${interaction.commandName}".`
-      );
       await command.execute(interaction);
       logger.trace(
-        { command: commandInfo },
+        { data: { command: commandInfo } },
         `Successfully executed command "${interaction.commandName}".`
       );
     } catch (error) {

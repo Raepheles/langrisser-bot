@@ -5,6 +5,7 @@ import {
   setHeroes,
   setSkillToHeroes,
   SkillToHeroesCollection,
+  setSkills,
 } from '../lib/storage';
 import {
   Hero,
@@ -33,6 +34,9 @@ const logger = mainLogger.child({ module: 'parser' });
  * @returns {Promise<void>}
  */
 export async function parseHeroes(useCache: boolean = true) {
+  logger.info(
+    `Started parsing heroes, ${useCache ? 'using cache' : 'no cache'}.`
+  );
   if (useCache) {
     try {
       const heroesCacheText = await readFile('data/heroes.json', {
@@ -43,6 +47,7 @@ export async function parseHeroes(useCache: boolean = true) {
       const heroesCache = JSON.parse(heroesCacheText) as Hero[];
       const heroesCollection = new Collection<string, Hero>();
       const skillToHeroes: SkillToHeroesCollection = new Collection();
+      const skills: Collection<string, HeroSkill> = new Collection();
       heroesCache.forEach((hero) => {
         heroesCollection.set(hero.code, hero);
         for (const skill of getAllHeroSkills(hero)) {
@@ -50,10 +55,13 @@ export async function parseHeroes(useCache: boolean = true) {
             ...(skillToHeroes.get(skill.name) || []),
             { code: hero.code, name: hero.name },
           ]);
+          skills.set(skill.name, skill);
         }
       });
       setHeroes(heroesCollection);
       setSkillToHeroes(skillToHeroes);
+      setSkills(skills);
+      logger.info('Successfully read heroes cache.');
       return;
     } catch (error) {
       logger.error(
@@ -83,6 +91,7 @@ export async function parseHeroes(useCache: boolean = true) {
 
   const heroes: Collection<string, Hero> = new Collection();
   const skillToHeroes: SkillToHeroesCollection = new Collection();
+  const skills: Collection<string, HeroSkill> = new Collection();
   for (const parsedHero of parsedHeroes) {
     const { name, res } = parsedHero;
     if (!res.ok) {
@@ -106,6 +115,7 @@ export async function parseHeroes(useCache: boolean = true) {
           ...(skillToHeroes.get(skill.name) || []),
           { code: hero.code, name: hero.name },
         ]);
+        skills.set(skill.name, skill);
       }
       heroes.set(hero.name, h);
     } catch (error) {
@@ -114,6 +124,7 @@ export async function parseHeroes(useCache: boolean = true) {
   }
   setHeroes(heroes);
   setSkillToHeroes(skillToHeroes);
+  setSkills(skills);
   writeFile('data/heroes.json', JSON.stringify(heroes.toJSON(), undefined, 2))
     .then(() => logger.info(`${heroes.size} heroes are cached.`))
     .catch((error) =>

@@ -1,6 +1,6 @@
 import { Collection } from 'discord.js';
 import { Command } from '../types/Command';
-import { Hero } from '../types/Hero';
+import { Hero, HeroSkill } from '../types/Hero';
 
 export type SkillToHeroesCollection = Collection<
   string,
@@ -11,6 +11,7 @@ let commands: Collection<string, Command>;
 let startDate: Date;
 let heroes: Collection<string, Hero>;
 let skillToHeroes: SkillToHeroesCollection;
+let skills: Collection<string, HeroSkill>;
 
 export function setCommands(cmds: Collection<string, Command>) {
   commands = cmds;
@@ -26,6 +27,14 @@ export function setHeroes(_heroes: Collection<string, Hero>) {
 
 export function setSkillToHeroes(_skillToHeroes: SkillToHeroesCollection) {
   skillToHeroes = _skillToHeroes;
+}
+
+export function setSkills(_skills: Collection<string, HeroSkill>) {
+  skills = _skills;
+}
+
+export function getSkills() {
+  return skills;
 }
 
 export function getSkillToHeroes() {

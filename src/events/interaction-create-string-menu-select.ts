@@ -1,7 +1,9 @@
 import { Events, StringSelectMenuInteraction, Interaction } from 'discord.js';
-import logger from '../lib/logger';
+import mainLogger from '../lib/logger';
 import { getCommands } from '../lib/storage';
 import { Event } from '../types/Event';
+
+const logger = mainLogger.child({ module: 'commands' });
 
 export default class extends Event {
   constructor() {

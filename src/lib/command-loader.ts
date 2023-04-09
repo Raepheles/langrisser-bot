@@ -24,6 +24,8 @@ export async function loadCommands() {
   const data = (await rest.put(Routes.applicationCommands(DISCORD_CLIENT_ID!), {
     body: cmds.map((cmd) => cmd.data.toJSON()),
   })) as unknown[];
-  logger.info(`Successfully reloaded ${data.length} application (/) commands.`);
-  logger.trace({ commands: data }, 'Loaded commands');
+  logger.info(
+    { data },
+    `Successfully reloaded ${data.length} application (/) commands.`
+  );
 }

@@ -19,4 +19,6 @@ async function start() {
   client.login(DISCORD_BOT_TOKEN);
 }
 
-start().catch((error) => logger.error(error, 'Error starting the application'));
+start().catch((error) =>
+  logger.error({ error }, 'Error starting the application')
+);

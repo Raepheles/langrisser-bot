@@ -64,3 +64,37 @@ function levenshteinDistance(str1: string, str2: string) {
 
   return dp[m][n];
 }
+
+/**
+ * Join an array of strings until the resulting string's length is less than or equal to a given maximum length.
+ * @param {string[]} arr - The array of strings to join.
+ * @param {string} joiner - The string to join the array with.
+ * @param {number} maxLength - The maximum length of the resulting string.
+ * @returns {string[]} - An array of strings that are joined by comma from the first parameter until its length is max_length.
+ */
+export function splitStrings(
+  arr: string[],
+  joiner: string,
+  maxLength: number
+): string[] {
+  const result: string[] = [];
+  let curr = '';
+
+  for (const str of arr) {
+    if (curr.length + str.length + joiner.length > maxLength) {
+      if (curr !== '') result.push(curr);
+      curr = str;
+    } else {
+      if (curr === '') {
+        curr = str;
+      } else {
+        curr = `${curr}${joiner}${str}`;
+      }
+    }
+  }
+
+  if (curr !== '') {
+    result.push(curr);
+  }
+  return result;
+}

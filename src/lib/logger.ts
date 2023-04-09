@@ -18,7 +18,7 @@ const transports = pino.transport({
       : []),
     {
       target: 'pino-pretty',
-      options: { colorize: true, ignore: 'pid,hostname,module' },
+      options: { colorize: true, ignore: 'pid,hostname,module,data' },
       level: 'info',
     },
   ],
@@ -30,6 +30,7 @@ const logger = pino(
     base: {
       module: 'main',
     },
+    errorKey: 'error',
   },
   transports
 );
