@@ -9,7 +9,7 @@ export async function loadCommands() {
   const commandFilesPath = join(__dirname, '..', 'commands');
   const commandFiles = await readdir(commandFilesPath);
   const cmds: Collection<string, Command> = new Collection();
-  for (const file of commandFiles) {
+  for (const file of commandFiles.filter((f) => !f.endsWith('.map'))) {
     const module = await import(join(commandFilesPath, file));
     // eslint-disable-next-line new-cap
     const command = new module.default() as Command;
