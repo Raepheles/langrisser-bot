@@ -1,29 +1,22 @@
-import { config } from 'dotenv';
+import './lib/set-envrionment-config';
+import logger from './lib/logger';
+import { GatewayIntentBits } from 'discord.js';
+import { loadCommands } from './lib/command-loader';
+import { loadEvents } from './lib/event-loader';
+import { BotClient } from './types/BotClient';
+import { setStartDate } from './lib/storage';
+import { parseHeroes } from './utils/parser';
 
-function setEnvironmentConfig() {
-  const env = process.env.NODE_ENV;
-  switch (env) {
-    case 'development':
-      config({ path: '.env.dev' });
-      break;
-    case 'production':
-      config();
-      break;
-    case 'test':
-      config({ path: '.env.test' });
-      break;
-    default:
-      throw new Error(`Unknown environment: ${env}`);
-  }
+async function start() {
+  const { DISCORD_BOT_TOKEN } = process.env;
+  const client = new BotClient({
+    intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMembers],
+  });
+  await parseHeroes(); // Uses cache if available
+  await loadCommands();
+  await loadEvents(client);
+  setStartDate(new Date());
+  client.login(DISCORD_BOT_TOKEN);
 }
 
-export function start() {
-  console.log('Hello World');
-}
-
-try {
-  setEnvironmentConfig();
-  start();
-} catch (err) {
-  console.error(err);
-}
+start().catch((error) => logger.error(error, 'Error starting the application'));
