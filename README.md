@@ -4,6 +4,9 @@ A discord bot for the mobile game Langrisser.
 
 # Changelog
 
+# 0.2.1
+- Bug fixes
+
 ## 0.2.0
 - Removed `/image` and `/bond` commands and added them as subcommands to `/hero` command.
 - Added `/hero skill` command to look up for hero skills.

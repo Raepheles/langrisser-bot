@@ -15,13 +15,14 @@ import {
 } from 'discord.js';
 import { getHeroes, getSkills } from '../lib/storage';
 import { Command } from '../types/Command';
-import {
-  WIKI_HEROES_URL,
-  WIKI_HERO_CARDS_URL,
-  WIKI_SKILLS_URL,
-} from '../utils/constants';
 import { findSimilarStrings } from '../utils/string';
 import { Hero } from '../types/Hero';
+import {
+  getHeroImageUrl,
+  getHeroThumbnailUrl,
+  getHeroWikiUrl,
+  getSkillThumbnailUrl,
+} from '../utils/url';
 
 interface CommandOptions {
   ephemeral: boolean;
@@ -209,7 +210,7 @@ export default class extends Command {
           ...interaction.message.embeds[0].data,
           description: skillDescription,
           thumbnail: {
-            url: encodeURI(`${WIKI_SKILLS_URL}/${skill.name}.png`),
+            url: getSkillThumbnailUrl(skill.name),
           },
         },
       ],
@@ -274,9 +275,9 @@ export default class extends Command {
         {
           color: getEmbedColorFromRarity(selectedHero.rarity),
           title: `${selectedHero.name} ${heroFactions}`,
-          url: encodeURI(`${WIKI_HEROES_URL}/heroes/${selectedHero.code}`),
+          url: getHeroWikiUrl(selectedHero.code),
           thumbnail: {
-            url: encodeURI(`${WIKI_HERO_CARDS_URL}/${selectedHero.name}.png`),
+            url: getHeroThumbnailUrl(selectedHero.name),
           },
           timestamp: new Date().toISOString(),
           footer: {
@@ -344,7 +345,7 @@ export default class extends Command {
         {
           color: getEmbedColorFromRarity(selectedHero.rarity),
           title: `${selectedHero.name} ${heroFactions}`,
-          url: encodeURI(`${WIKI_HEROES_URL}/heroes/${selectedHero.code}`),
+          url: getHeroWikiUrl(selectedHero.code),
           description: 'Select the skill you want to see the details of',
           timestamp: new Date().toISOString(),
           footer: {
@@ -368,18 +369,14 @@ export default class extends Command {
           {
             label: 'Base',
             description: 'Base skin',
-            value: encodeURI(
-              `${WIKI_HEROES_URL}/${selectedHero.name}/${selectedHero.name}.png`
-            ),
+            value: getHeroImageUrl(selectedHero.name),
           },
           ...(selectedHero.spHero
             ? [
                 {
                   label: 'SP',
                   description: 'SP skin',
-                  value: encodeURI(
-                    `${WIKI_HEROES_URL}/${selectedHero.name}/${selectedHero.name} SP.png`
-                  ),
+                  value: getHeroImageUrl(selectedHero.name, 'SP'),
                 },
               ]
             : []),
@@ -388,9 +385,7 @@ export default class extends Command {
             .map((skin) => ({
               label: skin.name!,
               description: skin.name!,
-              value: encodeURI(
-                `${WIKI_HEROES_URL}/${selectedHero.name}/${selectedHero.name} Skin ${skin.index}.png`
-              ),
+              value: getHeroImageUrl(selectedHero.name, `Skin ${skin.index}`),
             }))
         )
     );
@@ -401,7 +396,7 @@ export default class extends Command {
         {
           color: getEmbedColorFromRarity(selectedHero.rarity),
           title: `${selectedHero.name} ${heroFactions}`,
-          url: encodeURI(`${WIKI_HEROES_URL}/heroes/${selectedHero.code}`),
+          url: getHeroWikiUrl(selectedHero.code),
           description: 'Select the skin you want to see',
           timestamp: new Date().toISOString(),
           footer: {
@@ -428,9 +423,9 @@ export default class extends Command {
         {
           color: getEmbedColorFromRarity(selectedHero.rarity),
           title: `${selectedHero.name} ${heroFactions}`,
-          url: encodeURI(`${WIKI_HEROES_URL}/heroes/${selectedHero.code}`),
+          url: getHeroWikiUrl(selectedHero.code),
           thumbnail: {
-            url: encodeURI(`${WIKI_HERO_CARDS_URL}/${selectedHero.name}.png`),
+            url: getHeroThumbnailUrl(selectedHero.name),
           },
           timestamp: new Date().toISOString(),
           footer: {
@@ -448,9 +443,9 @@ export default class extends Command {
                     value: bondReq.relatedBonds
                       .map(
                         (b) =>
-                          `- **[${b.name}](${WIKI_HEROES_URL}/${encodeURI(
-                            b.code
-                          )})** ${b.type}: ${b.text}`
+                          `- **[${b.name}](${getHeroWikiUrl(b.code)})** ${
+                            b.type
+                          }: ${b.text}`
                       )
                       .join('\n'),
                   },

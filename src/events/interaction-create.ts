@@ -23,7 +23,7 @@ export default class extends Event {
     const commandInfo = {
       user: interaction.user.tag,
       guild: interaction.guild?.name,
-      options: interaction.options,
+      options: interaction.options.data,
     };
 
     try {
