@@ -4,6 +4,9 @@ A discord bot for the mobile game Langrisser.
 
 # Changelog
 
+# 0.2.2
+- Fixed a bug that occured while using `/hero image` command if the hero name was too long.
+
 # 0.2.1
 - Bug fixes
 
