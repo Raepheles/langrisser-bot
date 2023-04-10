@@ -219,12 +219,18 @@ export default class extends Command {
 
   private async menuImageSelect(interaction: StringSelectMenuInteraction) {
     await interaction.deferUpdate();
+    const choice = JSON.parse(interaction.values[0]) as {
+      h: string;
+      s?: string;
+    };
     await interaction.editReply({
       embeds: [
         {
           ...interaction.message.embeds[0].data,
           description: undefined,
-          image: { url: interaction.values[0] },
+          image: {
+            url: getHeroImageUrl(choice.h, choice.s),
+          },
         },
       ],
     });
@@ -369,14 +375,14 @@ export default class extends Command {
           {
             label: 'Base',
             description: 'Base skin',
-            value: getHeroImageUrl(selectedHero.name),
+            value: JSON.stringify({ h: selectedHero.name }),
           },
           ...(selectedHero.spHero
             ? [
                 {
                   label: 'SP',
                   description: 'SP skin',
-                  value: getHeroImageUrl(selectedHero.name, 'SP'),
+                  value: JSON.stringify({ h: selectedHero.name, s: 'SP' }),
                 },
               ]
             : []),
@@ -385,7 +391,10 @@ export default class extends Command {
             .map((skin) => ({
               label: skin.name!,
               description: skin.name!,
-              value: getHeroImageUrl(selectedHero.name, `Skin ${skin.index}`),
+              value: JSON.stringify({
+                h: selectedHero.name,
+                s: `Skin ${skin.index}`,
+              }),
             }))
         )
     );
