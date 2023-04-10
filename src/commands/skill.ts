@@ -79,7 +79,7 @@ export default class extends Command {
           title: skill.name,
           description: skillDescription,
           thumbnail: {
-            url: `${WIKI_SKILLS_URL}/${encodeURI(skill.name)}.png`,
+            url: encodeURI(`${WIKI_SKILLS_URL}/${skill.name}.png`),
           },
           fields: heroesWithSkillList.map((h) => ({
             name: 'Heroes with this skill',

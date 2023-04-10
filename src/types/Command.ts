@@ -6,7 +6,7 @@ import {
   SlashCommandSubcommandsOnlyBuilder,
 } from 'discord.js';
 
-export class Command {
+export abstract class Command {
   data:
     | SlashCommandBuilder
     | Omit<SlashCommandBuilder, 'addSubcommand' | 'addSubcommandGroup'>
@@ -19,15 +19,27 @@ export class Command {
       | SlashCommandBuilder
       | Omit<SlashCommandBuilder, 'addSubcommand' | 'addSubcommandGroup'>
       | SlashCommandSubcommandsOnlyBuilder,
-    admin: boolean = false
+    admin = false
   ) {
     this.data = data;
     this.admin = admin;
   }
 
-  async execute(_interaction: CommandInteraction) {}
+  async execute(_interaction: CommandInteraction) {
+    throw new Error(
+      `Command "${this.data.name}" doesn't have an execute() method implemented.`
+    );
+  }
 
-  async autocomplete(_interaction: AutocompleteInteraction) {}
+  async autocomplete(_interaction: AutocompleteInteraction) {
+    throw new Error(
+      `Command "${this.data.name}" doesn't have an autocomplete() method implemented.`
+    );
+  }
 
-  async menuSelect(_interaction: StringSelectMenuInteraction) {}
+  async menuSelect(_interaction: StringSelectMenuInteraction) {
+    throw new Error(
+      `Command "${this.data.name}" doesn't have a menuSelect() method implemented.`
+    );
+  }
 }

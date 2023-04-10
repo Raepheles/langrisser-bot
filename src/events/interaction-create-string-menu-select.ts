@@ -33,6 +33,17 @@ export default class extends Event {
         error,
         `Error while executing menuSelect for command "${commandName}".`
       );
+      if (interaction.replied || interaction.deferred) {
+        await interaction.followUp({
+          content: 'There was an error while selecting an option on this menu!',
+          ephemeral: true,
+        });
+      } else {
+        await interaction.reply({
+          content: 'There was an error while selecting an option on this menu!',
+          ephemeral: true,
+        });
+      }
     }
   }
 }

@@ -7,12 +7,16 @@ interface EventOptions {
 
 export class Event {
   name: keyof ClientEvents;
-  once: boolean = false;
+  once = false;
 
   constructor({ name, once }: EventOptions) {
     this.name = name;
     if (once !== undefined) this.once = once;
   }
 
-  async execute(..._args: ClientEvents[typeof this.name]) {}
+  async execute(..._args: ClientEvents[typeof this.name]) {
+    throw new Error(
+      `Event "${this.name}" doesn't have an execute() method implemented.`
+    );
+  }
 }

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Collection } from 'discord.js';
 import { readFile } from 'fs/promises';
 import mainLogger from '../lib/logger';
@@ -33,7 +34,7 @@ const logger = mainLogger.child({ module: 'parser' });
  * @param {boolean} [useCache=true] - Whether to use a cache file or fetch the data again.
  * @returns {Promise<void>}
  */
-export async function parseHeroes(useCache: boolean = true) {
+export async function parseHeroes(useCache = true) {
   logger.info(
     `Started parsing heroes, ${useCache ? 'using cache' : 'no cache'}.`
   );
@@ -397,7 +398,7 @@ function validateBondRequirements(bondObj: any, heroName: string): boolean {
 function validateClass(
   classObj: any,
   heroName: string,
-  child: boolean = false
+  child = false
 ): boolean {
   if (!classObj || typeof classObj !== 'object') {
     if (child)

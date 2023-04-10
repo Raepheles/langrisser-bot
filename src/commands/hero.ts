@@ -101,10 +101,10 @@ export default class extends Command {
     }
     switch (interaction.customId) {
       case 'skill-select':
-        this.menuSkillSelect(interaction);
+        await this.menuSkillSelect(interaction);
         break;
       case 'image-select':
-        this.menuImageSelect(interaction);
+        await this.menuImageSelect(interaction);
         break;
     }
   }
@@ -209,7 +209,7 @@ export default class extends Command {
           ...interaction.message.embeds[0].data,
           description: skillDescription,
           thumbnail: {
-            url: `${WIKI_SKILLS_URL}/${encodeURI(skill.name)}.png`,
+            url: encodeURI(`${WIKI_SKILLS_URL}/${skill.name}.png`),
           },
         },
       ],
@@ -274,9 +274,9 @@ export default class extends Command {
         {
           color: getEmbedColorFromRarity(selectedHero.rarity),
           title: `${selectedHero.name} ${heroFactions}`,
-          url: `${WIKI_HEROES_URL}/heroes/${encodeURI(selectedHero.code)}`,
+          url: encodeURI(`${WIKI_HEROES_URL}/heroes/${selectedHero.code}`),
           thumbnail: {
-            url: `${WIKI_HERO_CARDS_URL}/${encodeURI(selectedHero.name)}.png`,
+            url: encodeURI(`${WIKI_HERO_CARDS_URL}/${selectedHero.name}.png`),
           },
           timestamp: new Date().toISOString(),
           footer: {
@@ -344,7 +344,7 @@ export default class extends Command {
         {
           color: getEmbedColorFromRarity(selectedHero.rarity),
           title: `${selectedHero.name} ${heroFactions}`,
-          url: `${WIKI_HEROES_URL}/heroes/${encodeURI(selectedHero.code)}`,
+          url: encodeURI(`${WIKI_HEROES_URL}/heroes/${selectedHero.code}`),
           description: 'Select the skill you want to see the details of',
           timestamp: new Date().toISOString(),
           footer: {
@@ -368,16 +368,18 @@ export default class extends Command {
           {
             label: 'Base',
             description: 'Base skin',
-            value: `${WIKI_HEROES_URL}/${selectedHero.name}/${selectedHero.name}.png`,
+            value: encodeURI(
+              `${WIKI_HEROES_URL}/${selectedHero.name}/${selectedHero.name}.png`
+            ),
           },
           ...(selectedHero.spHero
             ? [
                 {
                   label: 'SP',
                   description: 'SP skin',
-                  value: `${WIKI_HEROES_URL}/${selectedHero.name}/${encodeURI(
-                    `${selectedHero.name} SP`
-                  )}.png`,
+                  value: encodeURI(
+                    `${WIKI_HEROES_URL}/${selectedHero.name}/${selectedHero.name} SP.png`
+                  ),
                 },
               ]
             : []),
@@ -386,9 +388,9 @@ export default class extends Command {
             .map((skin) => ({
               label: skin.name!,
               description: skin.name!,
-              value: `${WIKI_HEROES_URL}/${selectedHero.name}/${encodeURI(
-                `${selectedHero.name} Skin ${skin.index}`
-              )}.png`,
+              value: encodeURI(
+                `${WIKI_HEROES_URL}/${selectedHero.name}/${selectedHero.name} Skin ${skin.index}.png`
+              ),
             }))
         )
     );
@@ -399,7 +401,7 @@ export default class extends Command {
         {
           color: getEmbedColorFromRarity(selectedHero.rarity),
           title: `${selectedHero.name} ${heroFactions}`,
-          url: `${WIKI_HEROES_URL}/heroes/${encodeURI(selectedHero.code)}`,
+          url: encodeURI(`${WIKI_HEROES_URL}/heroes/${selectedHero.code}`),
           description: 'Select the skin you want to see',
           timestamp: new Date().toISOString(),
           footer: {
@@ -426,9 +428,9 @@ export default class extends Command {
         {
           color: getEmbedColorFromRarity(selectedHero.rarity),
           title: `${selectedHero.name} ${heroFactions}`,
-          url: `${WIKI_HEROES_URL}/heroes/${encodeURI(selectedHero.code)}`,
+          url: encodeURI(`${WIKI_HEROES_URL}/heroes/${selectedHero.code}`),
           thumbnail: {
-            url: `${WIKI_HERO_CARDS_URL}/${encodeURI(selectedHero.name)}.png`,
+            url: encodeURI(`${WIKI_HERO_CARDS_URL}/${selectedHero.name}.png`),
           },
           timestamp: new Date().toISOString(),
           footer: {
