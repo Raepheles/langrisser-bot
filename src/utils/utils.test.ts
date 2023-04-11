@@ -1,4 +1,4 @@
-import { Hero } from '../types/Hero';
+import { ReleasedHero } from '../types/Hero';
 import { getAllHeroSkills } from './utils';
 
 describe('getAllHeroSkills', () => {
@@ -266,4 +266,4 @@ const heroElwin = {
       },
     ],
   },
-} as unknown as Hero;
+} as unknown as ReleasedHero;

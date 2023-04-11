@@ -37,7 +37,7 @@ export default class extends Command {
   }
 
   public override async autocomplete(interaction: AutocompleteInteraction) {
-    const focusedValue = interaction.options.getFocused();
+    const focusedValue = interaction.options.getFocused().toLowerCase();
     const skills = getSkills();
     const similarSkills = findSimilarStrings(
       focusedValue,

@@ -3,6 +3,9 @@ export const WIKI_HEROES_URL = `${WIKI_BASE_URL}/heroes`;
 export const WIKI_HERO_CARDS_URL = `${WIKI_BASE_URL}/hero%20cards`;
 export const WIKI_SKILLS_URL = `${WIKI_BASE_URL}/skills`;
 
+export const UNRELEASED_HERO_WARNING =
+  '__**Information below is translated from the Chinese wiki and may NOT be accurate.**__';
+
 export const EMBED_COLOR_DEFAULT = 0xfeeacf;
 export const EMBED_COLOR_SSR = 0x75fec8;
 export const EMBED_COLOR_SR = 0xd8c94a;

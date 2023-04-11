@@ -2,6 +2,9 @@ import {
   ephemeralOptionAdder,
   getAllHeroSkills,
   getEmbedColorFromRarity,
+  getExclusiveEquipmentText,
+  getMaxStatsOfClass,
+  getSoldierBonusText,
 } from '../utils/utils';
 import {
   ActionRowBuilder,
@@ -16,14 +19,15 @@ import {
 import { getHeroes, getSkills } from '../lib/storage';
 import { Command } from '../types/Command';
 import { findSimilarStrings } from '../utils/string';
-import { Hero } from '../types/Hero';
+import { Hero, UnreleasedHero } from '../types/Hero';
 import {
   getHeroImageUrl,
   getHeroThumbnailUrl,
   getHeroWikiUrl,
   getSkillThumbnailUrl,
 } from '../utils/url';
-import { DefaultOptions } from '../utils/constants';
+import { DefaultOptions, UNRELEASED_HERO_WARNING } from '../utils/constants';
+import { isReleasedHero } from '../utils/type';
 
 interface CommandOptions {
   ephemeral: boolean;
@@ -106,8 +110,14 @@ export default class extends Command {
       case 'skill-select':
         await this.menuSkillSelect(interaction);
         break;
+      case 'skill-select-unreleased':
+        await this.menuSkillSelect(interaction, true);
+        break;
       case 'image-select':
         await this.menuImageSelect(interaction);
+        break;
+      case 'image-select-unreleased':
+        await this.menuImageSelect(interaction, true);
         break;
     }
   }
@@ -190,48 +200,88 @@ export default class extends Command {
     }
   }
 
-  private async menuSkillSelect(interaction: StringSelectMenuInteraction) {
+  private async menuSkillSelect(
+    interaction: StringSelectMenuInteraction,
+    unreleased = false
+  ) {
     await interaction.deferUpdate();
-    const skillName = interaction.values[0];
-    const skill = getSkills().get(skillName);
-    if (!skill) {
-      await interaction.editReply({
-        content: `Skill ${skillName} not found!`,
-        embeds: [],
-        components: [],
-      });
-      return;
-    }
+    let description: string;
+    let thumbnailUrl: string;
+    if (unreleased) {
+      const choice = JSON.parse(interaction.values[0]) as {
+        h: string;
+        s: string;
+      };
 
-    const skillDescription = `**${skill.name}**\nCost: ${skill.cost} \
-    | CD: ${skill.cd} | Range: ${skill.range} | Span: ${skill.span}\n${skill.description}`;
+      const hero = getHeroes().get(choice.h) as UnreleasedHero;
+      const skill = [...hero.skills, hero.awakeningSkill].find(
+        (s) => s?.name === choice.s
+      );
+      if (!skill) {
+        await interaction.editReply({
+          content: `Skill ${choice.s} not found!`,
+          embeds: [],
+          components: [],
+        });
+        return;
+      }
+      description = `**${skill.name}**\nCost: ${skill.cost} \
+      | CD: ${skill.cd} | Range: ${skill.range} | Span: ${skill.span}\n${skill.description}`;
+      thumbnailUrl = skill.thumbnailUrl;
+    } else {
+      const skillName = interaction.values[0];
+      const skill = getSkills().get(skillName);
+      if (!skill) {
+        await interaction.editReply({
+          content: `Skill ${skillName} not found!`,
+          embeds: [],
+          components: [],
+        });
+        return;
+      }
+
+      description = `**${skill.name}**\nCost: ${skill.cost} \
+        | CD: ${skill.cd} | Range: ${skill.range} | Span: ${skill.span}\n${skill.description}`;
+      thumbnailUrl = getSkillThumbnailUrl(skill.name);
+    }
 
     await interaction.editReply({
       embeds: [
         {
           ...interaction.message.embeds[0].data,
-          description: skillDescription,
+          description,
           thumbnail: {
-            url: getSkillThumbnailUrl(skill.name),
+            url: thumbnailUrl,
           },
         },
       ],
     });
   }
 
-  private async menuImageSelect(interaction: StringSelectMenuInteraction) {
+  private async menuImageSelect(
+    interaction: StringSelectMenuInteraction,
+    unreleased = false
+  ) {
     await interaction.deferUpdate();
     const choice = JSON.parse(interaction.values[0]) as {
       h: string;
       s?: string;
     };
+    let url;
+    if (unreleased) {
+      const hero = getHeroes().get(choice.h) as UnreleasedHero;
+      const skin = hero.skins.find((s) => s.name === choice.s);
+      url = skin?.url as string;
+    } else {
+      url = getHeroImageUrl(choice.h, choice.s);
+    }
     await interaction.editReply({
       embeds: [
         {
           ...interaction.message.embeds[0].data,
           description: undefined,
           image: {
-            url: getHeroImageUrl(choice.h, choice.s),
+            url,
           },
         },
       ],
@@ -240,30 +290,26 @@ export default class extends Command {
 
   private async commandInfo(
     interaction: ChatInputCommandInteraction,
-    { ephemeral, selectedHero, heroFactions }: CommandOptions
+    commandOptions: CommandOptions
   ) {
+    const { ephemeral, selectedHero, heroFactions } = commandOptions;
+    if (!isReleasedHero(selectedHero)) {
+      await this.commandInfoUnreleased(interaction, commandOptions);
+      return;
+    }
     const sp = selectedHero.spHero;
 
     const secondLineClasses = selectedHero.startingClass.children.flatMap(
       (c) => c.children
     );
     const maxStats = secondLineClasses
-      .map(
-        (c) => `- **${c.name}**: HP: ${c.maxStats?.hp} \
-      | ATK: ${c.maxStats?.atk} \
-      | DEF: ${c.maxStats?.def} \
-      | INT: ${c.maxStats?.int} \
-      | MDEF: ${c.maxStats?.mdef} \
-      | SKL: ${c.maxStats?.skill}`
-      )
+      .map((c) => getMaxStatsOfClass(c))
       .join('\n');
 
-    let soldierBonusText = `**${secondLineClasses
-      .map((c) => c.name)
-      .join(' / ')}**: HP: ${selectedHero.soldierBonus.hp} \
-      | ATK: ${selectedHero.soldierBonus.atk} \
-      | DEF: ${selectedHero.soldierBonus.def} \
-      | MDEF: ${selectedHero.soldierBonus.mdef}`;
+    let soldierBonusText = getSoldierBonusText(
+      secondLineClasses,
+      selectedHero.soldierBonus
+    );
 
     if (sp) {
       soldierBonusText = `${soldierBonusText}\n**${sp.name}**: HP: ${sp.soldierBonus.hp} \
@@ -272,10 +318,7 @@ export default class extends Command {
       | MDEF: ${sp.soldierBonus.mdef}`;
     }
 
-    let eeText;
-    const ee = selectedHero.exclusiveEquipment;
-    if (ee)
-      eeText = `**Name:** ${ee.name}\n**Effect:** ${ee.effect}\n**Slot:** ${ee.slot}`;
+    const eeText = getExclusiveEquipmentText(selectedHero.exclusiveEquipment);
 
     await interaction.reply({
       ephemeral,
@@ -328,8 +371,13 @@ export default class extends Command {
 
   private async commandSkill(
     interaction: ChatInputCommandInteraction,
-    { ephemeral, selectedHero, heroFactions }: CommandOptions
+    commandOptions: CommandOptions
   ) {
+    const { ephemeral, selectedHero, heroFactions } = commandOptions;
+    if (!isReleasedHero(selectedHero)) {
+      await this.commandSkillUnreleased(interaction, commandOptions);
+      return;
+    }
     const skills = getAllHeroSkills(selectedHero);
 
     const row = new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(
@@ -367,8 +415,13 @@ export default class extends Command {
 
   private async commandImage(
     interaction: ChatInputCommandInteraction,
-    { ephemeral, selectedHero, heroFactions }: CommandOptions
+    commandOptions: CommandOptions
   ) {
+    const { ephemeral, selectedHero, heroFactions } = commandOptions;
+    if (!isReleasedHero(selectedHero)) {
+      await this.commandImageUnreleased(interaction, commandOptions);
+      return;
+    }
     const row = new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(
       new StringSelectMenuBuilder()
         .setCustomId('image-select')
@@ -423,6 +476,7 @@ export default class extends Command {
     interaction: ChatInputCommandInteraction,
     { ephemeral, selectedHero, heroFactions }: CommandOptions
   ) {
+    const isReleased = isReleasedHero(selectedHero);
     const bondReq = selectedHero.bondRequirements;
     const bondRequirementsText = `${bondReq.bond2}\n${bondReq.bond3}\n${bondReq.bond4}\n${bondReq.bond5}`;
 
@@ -430,13 +484,16 @@ export default class extends Command {
 
     await interaction.reply({
       ephemeral,
+      content: !isReleased ? UNRELEASED_HERO_WARNING : undefined,
       embeds: [
         {
           color: getEmbedColorFromRarity(selectedHero.rarity),
           title: `${selectedHero.name} ${heroFactions}`,
-          url: getHeroWikiUrl(selectedHero.code),
+          url: isReleased ? getHeroWikiUrl(selectedHero.code) : undefined,
           thumbnail: {
-            url: getHeroThumbnailUrl(selectedHero.name),
+            url: isReleased
+              ? getHeroThumbnailUrl(selectedHero.name)
+              : selectedHero.thumbnailUrl,
           },
           timestamp: new Date().toISOString(),
           footer: {
@@ -473,6 +530,160 @@ export default class extends Command {
           ],
         },
       ],
+    });
+  }
+
+  private async commandInfoUnreleased(
+    interaction: ChatInputCommandInteraction,
+    commandOptions: CommandOptions
+  ) {
+    const { ephemeral, selectedHero, heroFactions } = commandOptions;
+    if (isReleasedHero(selectedHero)) return;
+
+    const eeText = getExclusiveEquipmentText(selectedHero.exclusiveEquipment);
+
+    const maxStats = selectedHero.classes
+      .map((c) => getMaxStatsOfClass(c))
+      .join('\n');
+
+    const soldierBonusText = getSoldierBonusText(
+      selectedHero.classes,
+      selectedHero.soldierBonus
+    );
+
+    await interaction.reply({
+      ephemeral,
+      content: UNRELEASED_HERO_WARNING,
+      embeds: [
+        {
+          color: getEmbedColorFromRarity(selectedHero.rarity),
+          title: `${selectedHero.name} ${heroFactions}`,
+          thumbnail: {
+            url: selectedHero.thumbnailUrl,
+          },
+          timestamp: new Date().toISOString(),
+          footer: {
+            text: `Requested by ${interaction.user.tag}`,
+          },
+          fields: [
+            {
+              name: `Talent: ${selectedHero.talent.name}`,
+              value: selectedHero.talent.description,
+            },
+            ...(eeText
+              ? [
+                  {
+                    name: 'Exclusive Equipment',
+                    value: eeText,
+                  },
+                ]
+              : []),
+            {
+              name: 'Lv70 Max Stats',
+              value: maxStats,
+            },
+            {
+              name: 'Soldier Bonus',
+              value: soldierBonusText,
+            },
+          ],
+        },
+      ],
+    });
+  }
+
+  private async commandSkillUnreleased(
+    interaction: ChatInputCommandInteraction,
+    commandOptions: CommandOptions
+  ) {
+    const { ephemeral, selectedHero, heroFactions } = commandOptions;
+    if (isReleasedHero(selectedHero)) return;
+
+    const selectOptions = selectedHero.skills.map((skill) => ({
+      label: skill.name,
+      description: `${skill.description.substring(0, 45)}${
+        skill.description.length > 45 ? '...' : ''
+      }`,
+      value: JSON.stringify({
+        h: selectedHero.code,
+        s: skill.name,
+      }),
+    }));
+    if (selectedHero.awakeningSkill) {
+      selectOptions.unshift({
+        label: selectedHero.awakeningSkill.name,
+        description: `${selectedHero.awakeningSkill.description.substring(
+          0,
+          45
+        )}${selectedHero.awakeningSkill.description.length > 45 ? '...' : ''}`,
+        value: JSON.stringify({
+          h: selectedHero.code,
+          s: selectedHero.awakeningSkill.name,
+        }),
+      });
+    }
+    const row = new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(
+      new StringSelectMenuBuilder()
+        .setCustomId('skill-select-unreleased')
+        .setPlaceholder('Please select a skill')
+        .addOptions(selectOptions)
+    );
+
+    await interaction.reply({
+      ephemeral,
+      content: UNRELEASED_HERO_WARNING,
+      embeds: [
+        {
+          color: getEmbedColorFromRarity(selectedHero.rarity),
+          title: `${selectedHero.name} ${heroFactions}`,
+          description: 'Select the skill you want to see the details of',
+          timestamp: new Date().toISOString(),
+          footer: {
+            text: `Requested by ${interaction.user.tag}`,
+          },
+        },
+      ],
+      components: [row],
+    });
+  }
+
+  private async commandImageUnreleased(
+    interaction: ChatInputCommandInteraction,
+    commandOptions: CommandOptions
+  ) {
+    const { ephemeral, selectedHero, heroFactions } = commandOptions;
+    if (isReleasedHero(selectedHero)) return;
+
+    const row = new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(
+      new StringSelectMenuBuilder()
+        .setCustomId('image-select-unreleased')
+        .setPlaceholder('Please select a skin')
+        .addOptions(
+          selectedHero.skins.map((skin) => ({
+            label: skin.name,
+            description: skin.name,
+            value: JSON.stringify({
+              h: selectedHero.code,
+              s: skin.name,
+            }),
+          }))
+        )
+    );
+
+    await interaction.reply({
+      ephemeral,
+      embeds: [
+        {
+          color: getEmbedColorFromRarity(selectedHero.rarity),
+          title: `${selectedHero.name} ${heroFactions}`,
+          description: 'Select the skin you want to see',
+          timestamp: new Date().toISOString(),
+          footer: {
+            text: `Requested by ${interaction.user.tag}`,
+          },
+        },
+      ],
+      components: [row],
     });
   }
 }

@@ -1,6 +1,8 @@
 interface FindSimilarStringOptions {
   maxDistance?: number;
   numberOfResults?: number;
+  // convert strings in the array to lowercase before comparing
+  lowerCase?: boolean;
 }
 
 export function findSimilarStrings(
@@ -8,20 +10,22 @@ export function findSimilarStrings(
   arr: string[],
   opts: FindSimilarStringOptions = {}
 ): string[] {
-  const { maxDistance = 5, numberOfResults = 5 } = opts;
+  const { maxDistance = 5, numberOfResults = 5, lowerCase = true } = opts;
   let oneDistanceStrings = 0;
   const matches: { text: string; dist: number; substr: boolean }[] = [];
 
-  for (const string of arr) {
+  for (const originalString of arr) {
+    let string = originalString;
+    if (lowerCase) string = string.toLowerCase();
     const distance = levenshteinDistance(inputString, string);
     if (distance === 0) {
-      return [string]; // Exact match
+      return [originalString]; // Exact match
     }
     if (distance === 1) oneDistanceStrings++;
     if (string.indexOf(inputString) !== -1) {
-      matches.push({ text: string, dist: distance, substr: true });
+      matches.push({ text: originalString, dist: distance, substr: true });
     } else if (distance <= maxDistance) {
-      matches.push({ text: string, dist: distance, substr: false });
+      matches.push({ text: originalString, dist: distance, substr: false });
     }
     if (oneDistanceStrings >= numberOfResults) break;
   }

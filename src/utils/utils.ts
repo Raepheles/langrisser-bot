@@ -1,8 +1,14 @@
 import { SlashCommandBooleanOption } from 'discord.js';
-import { Hero, HeroClass, HeroSkill } from '../types/Hero';
+import {
+  HeroClass,
+  HeroExclusiveEquipment,
+  HeroSkill,
+  HeroSoldierBonus,
+  ReleasedHero,
+} from '../types/Hero';
 import { EMBED_COLOR_R, EMBED_COLOR_SR, EMBED_COLOR_SSR } from './constants';
 
-export function getAllHeroSkills(hero: Hero): HeroSkill[] {
+export function getAllHeroSkills(hero: ReleasedHero): HeroSkill[] {
   const skills: HeroSkill[] = [];
   if (hero.awakeningSkill) skills.push(hero.awakeningSkill);
   if (hero.spHero) skills.push(...hero.spHero.skills);
@@ -38,3 +44,27 @@ export const ephemeralOptionAdder = (option: SlashCommandBooleanOption) =>
       'Whether the bot reply should be visible only to you. Default: true'
     )
     .setRequired(false);
+
+export const getExclusiveEquipmentText = (ee?: HeroExclusiveEquipment) =>
+  ee
+    ? `**Name:** ${ee.name}\n**Effect:** ${ee.effect}\n**Slot:** ${ee.slot}`
+    : undefined;
+
+export const getMaxStatsOfClass = (
+  heroClass: Pick<HeroClass, 'maxStats' | 'name'>
+) => `- **${heroClass.name}**: HP: ${heroClass.maxStats?.hp} \
+    | ATK: ${heroClass.maxStats?.atk} \
+    | DEF: ${heroClass.maxStats?.def} \
+    | INT: ${heroClass.maxStats?.int} \
+    | MDEF: ${heroClass.maxStats?.mdef} \
+    | SKL: ${heroClass.maxStats?.skill}`;
+
+export const getSoldierBonusText = (
+  heroClassList: Pick<HeroClass, 'name'>[],
+  soldierBonus: HeroSoldierBonus
+) => `**${heroClassList.map((c) => c.name).join(' / ')}**: HP: ${
+  soldierBonus.hp
+} \
+  | ATK: ${soldierBonus.atk} \
+  | DEF: ${soldierBonus.def} \
+  | MDEF: ${soldierBonus.mdef}`;

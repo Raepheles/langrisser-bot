@@ -89,7 +89,26 @@ export interface SPHeroClass extends HeroClass {
   unlockRequirements: SPHeroUnlockRequirements;
 }
 
-export interface Hero {
+export interface UnreleasedHero {
+  released: boolean;
+  code: string;
+  name: string;
+  rarity: string;
+  talent: HeroTalent;
+  soldierBonus: HeroSoldierBonus;
+  classes: { name: string; maxStats: HeroStats }[];
+  awakeningSkill?: HeroSkill & { thumbnailUrl: string };
+  factions: string[];
+  exclusiveEquipment?: HeroExclusiveEquipment;
+  skills: (HeroSkill & { thumbnailUrl: string })[];
+  skins: { name: string; url: string }[];
+  thumbnailUrl: string;
+  heartBond: HeroHeartBond;
+  bondRequirements: HeroBondRequirements;
+}
+
+export interface ReleasedHero {
+  released: boolean;
   code: string;
   name: string;
   rarity: string;
@@ -104,3 +123,5 @@ export interface Hero {
   bondRequirements: HeroBondRequirements;
   spHero?: SPHeroClass;
 }
+
+export type Hero = ReleasedHero | UnreleasedHero;

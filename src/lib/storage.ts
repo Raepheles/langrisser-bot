@@ -1,10 +1,10 @@
 import { Collection } from 'discord.js';
 import { Command } from '../types/Command';
-import { Hero, HeroSkill } from '../types/Hero';
+import { Hero, HeroSkill, ReleasedHero } from '../types/Hero';
 
 export type SkillToHeroesCollection = Collection<
   string,
-  Pick<Hero, 'code' | 'name'>[]
+  Pick<ReleasedHero, 'code' | 'name'>[]
 >;
 
 let commands: Collection<string, Command>;

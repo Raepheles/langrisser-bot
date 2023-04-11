@@ -19,8 +19,10 @@ import {
   HeroSoldierBonus,
   HeroStats,
   HeroTalent,
+  ReleasedHero,
   SPHeroClass,
   SPHeroUnlockRequirements,
+  UnreleasedHero,
 } from '../types/Hero';
 import { WIKI_BASE_URL } from './constants';
 import { writeFile } from './file';
@@ -38,6 +40,15 @@ export async function parseHeroes(useCache = true) {
   logger.info(
     `Started parsing heroes, ${useCache ? 'using cache' : 'no cache'}.`
   );
+  const unreleasedHeroesCacheText = await readFile(
+    'data/unreleased_heroes.json',
+    {
+      encoding: 'utf-8',
+    }
+  ).catch(() => '[]');
+  const unreleasedHeroesCache = JSON.parse(
+    unreleasedHeroesCacheText
+  ) as UnreleasedHero[];
   if (useCache) {
     try {
       const heroesCacheText = await readFile('data/heroes.json', {
@@ -45,7 +56,7 @@ export async function parseHeroes(useCache = true) {
       }).catch(() => {
         throw new Error('Could not read heroes cache.');
       });
-      const heroesCache = JSON.parse(heroesCacheText) as Hero[];
+      const heroesCache = JSON.parse(heroesCacheText) as ReleasedHero[];
       const heroesCollection = new Collection<string, Hero>();
       const skillToHeroes: SkillToHeroesCollection = new Collection();
       const skills: Collection<string, HeroSkill> = new Collection();
@@ -58,6 +69,9 @@ export async function parseHeroes(useCache = true) {
           ]);
           skills.set(skill.name, skill);
         }
+      });
+      unreleasedHeroesCache.forEach((hero) => {
+        heroesCollection.set(hero.code, hero);
       });
       setHeroes(heroesCollection);
       setSkillToHeroes(skillToHeroes);
@@ -119,6 +133,9 @@ export async function parseHeroes(useCache = true) {
         skills.set(skill.name, skill);
       }
       heroes.set(hero.name, h);
+      unreleasedHeroesCache.forEach((hero) => {
+        heroes.set(hero.code, hero);
+      });
     } catch (error) {
       logger.error(error, `Unexpected error while parsing data for "${name}".`);
     }
@@ -133,7 +150,7 @@ export async function parseHeroes(useCache = true) {
     );
 }
 
-function parseHero(hero: any): Hero {
+function parseHero(hero: any): ReleasedHero {
   let awakeningSkill: HeroSkill | undefined;
   if (hero.threeCostSkill) {
     awakeningSkill = {
@@ -216,6 +233,7 @@ function parseHero(hero: any): Hero {
   }
 
   return {
+    released: true,
     code: hero.name,
     name: hero.prettyName,
     rarity: hero.rarity,

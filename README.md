@@ -4,6 +4,12 @@ A discord bot for the mobile game Langrisser.
 
 # Changelog
 
+# 0.3.0
+- Improved `/skill` autocomplete suggestions.
+- Added support for heroes that are not released in global server yet.
+  - Note that their data needs to be manually added.
+- Added unreleased hero data "Awakener"
+
 # 0.2.3
 - Fixed a bug with `/about` command.
 - `/about` command provides doesn't provide unique user count anymore.
