@@ -4,6 +4,10 @@ A discord bot for the mobile game Langrisser.
 
 # Changelog
 
+# 0.2.3
+- Fixed a bug with `/about` command.
+- `/about` command provides doesn't provide unique user count anymore.
+- Added ephemeral option back to `/about` command.
 # 0.2.2
 - Fixed a bug that occured while using `/hero image` command if the hero name was too long.
 

@@ -6,7 +6,8 @@ import {
 } from 'discord.js';
 import { getStartDate } from '../lib/storage';
 import { Command } from '../types/Command';
-import { EMBED_COLOR_DEFAULT } from '../utils/constants';
+import { EMBED_COLOR_DEFAULT, DefaultOptions } from '../utils/constants';
+import { ephemeralOptionAdder } from '../utils/utils';
 
 export default class extends Command {
   constructor() {
@@ -14,28 +15,25 @@ export default class extends Command {
       new SlashCommandBuilder()
         .setName('about')
         .setDescription('About this bot')
+        .addBooleanOption(ephemeralOptionAdder)
     );
   }
 
   public override async execute(interaction: ChatInputCommandInteraction) {
+    const ephemeral =
+      interaction.options.getBoolean(DefaultOptions.EPHEMERAL) ?? true;
+    await interaction.deferReply({ ephemeral });
     const { OWNER_ID } = process.env;
     if (!OWNER_ID) {
       throw new Error('OWNER_ID is not defined.');
     }
-    const ephemeral = interaction.options.getBoolean('ephemeral') ?? true;
     const botOwner = await interaction.client.users.fetch(OWNER_ID);
     const guildCount = interaction.client.guilds.cache.size;
-    // fetch all guild members to update cache
-    await Promise.all(
-      interaction.client.guilds.cache.map((guild) => guild.members.fetch())
+    const userCount = interaction.client.guilds.cache.reduce(
+      (acc, guild) => acc + guild.memberCount,
+      0
     );
-    const userCount = interaction.client.guilds.cache.reduce((acc, guild) => {
-      const guildMembers = guild.members.cache.map((member) => member.user.id);
-      guildMembers.forEach(acc.add, acc);
-      return acc;
-    }, new Set<string>()).size;
-    await interaction.reply({
-      ephemeral,
+    await interaction.editReply({
       embeds: [
         {
           color: EMBED_COLOR_DEFAULT,

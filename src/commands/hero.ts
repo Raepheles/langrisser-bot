@@ -23,6 +23,7 @@ import {
   getHeroWikiUrl,
   getSkillThumbnailUrl,
 } from '../utils/url';
+import { DefaultOptions } from '../utils/constants';
 
 interface CommandOptions {
   ephemeral: boolean;
@@ -31,6 +32,7 @@ interface CommandOptions {
 }
 
 const Option = {
+  ...DefaultOptions,
   HERO_NAME: 'name',
 } as const;
 
@@ -125,7 +127,7 @@ export default class extends Command {
 
   public override async execute(interaction: ChatInputCommandInteraction) {
     const subCommand = interaction.options.getSubcommand();
-    const ephemeral = interaction.options.getBoolean('ephemeral') ?? true;
+    const ephemeral = interaction.options.getBoolean(Option.EPHEMERAL) ?? true;
     const selectedHeroText = interaction.options
       .getString(Option.HERO_NAME)!
       .toLowerCase();

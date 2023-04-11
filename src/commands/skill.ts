@@ -7,6 +7,7 @@ import {
 import { getSkills, getSkillToHeroes } from '../lib/storage';
 import { Command } from '../types/Command';
 import {
+  DefaultOptions,
   EMBED_COLOR_DEFAULT,
   WIKI_HEROES_URL,
   WIKI_SKILLS_URL,
@@ -14,6 +15,7 @@ import {
 import { findSimilarStrings, splitStrings } from '../utils/string';
 
 const Option = {
+  ...DefaultOptions,
   SKILL_NAME: 'name',
 } as const;
 
@@ -50,7 +52,7 @@ export default class extends Command {
   }
 
   public override async execute(interaction: ChatInputCommandInteraction) {
-    const ephemeral = interaction.options.getBoolean('ephemeral') ?? true;
+    const ephemeral = interaction.options.getBoolean(Option.EPHEMERAL) ?? true;
     const selectedSkillText = interaction.options.getString(Option.SKILL_NAME)!;
     const skill = getSkills().get(selectedSkillText);
     if (!skill) {
