@@ -34,7 +34,7 @@ export default class extends Event {
       );
     } catch (error) {
       logger.error(
-        error,
+        { data: { error, command: commandInfo } },
         `Error while executing command "${interaction.commandName}".`
       );
       if (interaction.replied || interaction.deferred) {

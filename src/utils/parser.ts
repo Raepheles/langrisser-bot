@@ -76,7 +76,13 @@ export async function parseHeroes(useCache = true) {
       setHeroes(heroesCollection);
       setSkillToHeroes(skillToHeroes);
       setSkills(skills);
-      logger.info('Successfully read heroes cache.');
+      logger.info(
+        `Successfully read ${
+          heroesCollection.size - unreleasedHeroesCache.length
+        } heroes and ${
+          unreleasedHeroesCache.length
+        } unreleased heroes from cache.`
+      );
       return;
     } catch (error) {
       logger.error(
@@ -133,21 +139,25 @@ export async function parseHeroes(useCache = true) {
         skills.set(skill.name, skill);
       }
       heroes.set(hero.name, h);
-      unreleasedHeroesCache.forEach((hero) => {
-        heroes.set(hero.code, hero);
-      });
     } catch (error) {
       logger.error(error, `Unexpected error while parsing data for "${name}".`);
     }
   }
+  try {
+    await writeFile(
+      'data/heroes.json',
+      JSON.stringify(heroes.toJSON(), undefined, 2)
+    );
+    logger.info(`${heroes.size} heroes are cached.`);
+  } catch (error) {
+    logger.error(error, 'Error while updating heroes cache.');
+  }
+  unreleasedHeroesCache.forEach((hero) => {
+    heroes.set(hero.code, hero);
+  });
   setHeroes(heroes);
   setSkillToHeroes(skillToHeroes);
   setSkills(skills);
-  writeFile('data/heroes.json', JSON.stringify(heroes.toJSON(), undefined, 2))
-    .then(() => logger.info(`${heroes.size} heroes are cached.`))
-    .catch((error) =>
-      logger.error(error, 'Error while updating heroes cache.')
-    );
 }
 
 function parseHero(hero: any): ReleasedHero {
