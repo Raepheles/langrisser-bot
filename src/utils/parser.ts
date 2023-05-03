@@ -37,6 +37,7 @@ const logger = mainLogger.child({ module: 'parser' });
  * @returns {Promise<void>}
  */
 export async function parseHeroes(useCache = true) {
+  const { WIKIGRISSER_URL_HASH } = process.env;
   logger.info(
     `Started parsing heroes, ${useCache ? 'using cache' : 'no cache'}.`
   );
@@ -91,19 +92,17 @@ export async function parseHeroes(useCache = true) {
       );
     }
   }
-
-  const res = await fetch(
-    `${WIKI_BASE_URL}/_next/data/uTXyKG2OXH0L4envim6Nj/heroes/gallery.json`
-  );
+  const heroesURL = `${WIKI_BASE_URL}/_next/data/${WIKIGRISSER_URL_HASH}/heroes/gallery.json`;
+  const res = await fetch(heroesURL);
   if (!res.ok) {
-    throw new Error('Error while fetching hero data');
+    throw new Error(`Error while fetching hero data from "${heroesURL}".`);
   }
   const data = await res.json();
   const heroNames = Object.keys(data.pageProps.heroes);
   const parsedHeroes = await Promise.all(
     heroNames.map((name) =>
       fetch(
-        `${WIKI_BASE_URL}/_next/data/uTXyKG2OXH0L4envim6Nj/heroes/${encodeURI(
+        `${WIKI_BASE_URL}/_next/data/${WIKIGRISSER_URL_HASH}/heroes/${encodeURI(
           name
         )}.json`
       ).then((res) => ({ name, res }))
