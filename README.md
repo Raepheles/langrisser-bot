@@ -2,6 +2,27 @@
 
 A discord bot for the mobile game Langrisser.
 
+# How to run yourself
+
+- Create a file named `.env` (and `.env.dev` for running in dev mode) and copy the contents of `.env.example` into the file.
+- Fill the environment variables in this new file
+  - Create a discord application at [dev portal](https://discord.com/developers/applications) and take bot token along with client id from there.
+  - `LOGTAIL_TOKEN` is neccessary unless you modify the code. You can create a free account [here](https://betterstack.com/logs)
+  - In order to find WIKIGRISSER_URL_HASH, go to [wikigrisser page](https://wikigrisser-next.com/). Open the inspection tool. Refresh the page and click Fetch/XHR below the filter box. Click `gallery.json`. In the headers tab you will see a Request URL. The part between `data/` and `/heroes` is what you need. For example, if request url is `https://wikigrisser-next.com/_next/data/28_4gwqv8rH2ivroApMl9/heroes/gallery.json` then the wikigrisser url hash value is `28_4gwqv8rH2ivroApMl9`. This is only relevant for parsing the data, and this value will change when the website is updated.
+  - You can change owner id with your own id.
+  - Admin server id is the server that link that appears in `/about` command.
+- Install dependencies with `yarn`, refer to [yarn's documentation](https://yarnpkg.com/getting-started/install) if you don't have it.
+- Run `yarn build` and once it's done run `yarn start`
+
+> [!NOTE]
+> `yarn start` uses `.env` file while `yarn dev` uses `.env.dev` file.
+
+![Wikigrisser help image{caption=test}](wikigrisser-hash.png)  
+*How to find WIKIGRISSER_URL_HASH value*
+
+> [!IMPORTANT]
+> Parser will only work if `data/heroes.json` doesn't exist. If you want to force the application to parse data again, simply change the file name to something like `heroes_01_01_24.json` and run the application again. Remember to update WIKIGRISSER_URL_HASH if it changed. I recommend keeping old json files as a backup in case parser is broken —which might happen if the website structure changes.
+
 # Changelog
 
 # 0.3.0
